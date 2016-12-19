@@ -1,6 +1,6 @@
 {
   "name": "vdux-slider",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A slider component for vdux.",
   "main": "lib/index.js",
   "repository": "https://github.com/danleavitt0/vdux-slider.git",
