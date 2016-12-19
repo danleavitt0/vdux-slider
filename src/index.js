@@ -9,7 +9,7 @@ const roundToStep = (step) => (num) => (Math.round(num / step) * step)
 
 export default component ({
 	render ({props, state, actions}) {
-		const {w = '300px', bgColor = 'blue', max = 100, name, step = 1, ...restProps} = props
+		const {w = '300px', bgColor = 'blue', max = 100, name, step = 1, onChange = () => {}, ...restProps} = props
 		const {value = 0, active} = state
 
 		const percentage = (value / max) * 100
@@ -39,7 +39,7 @@ export default component ({
 							transform={active ? 'scale(1.5)' : ''}
 							transition='transform .2s ease-in-out'
 							bgColor={bgColor}/>
-						<Input h='0' visibility='hidden' name={name} value={value}/>
+						<Input onChange={onChange} h='0' visibility='hidden' name={name} value={value}/>
 					</Block>
 				</Block>
 			</Window>
