@@ -20,7 +20,7 @@ export default component ({
 				<Block px='10px'>
 					<Block
 						py='10px'
-						cursor='move'
+						cursor='pointer'
 						onMouseDown={relativePositionDecoder((x) => actions.toggleActive(rounder(x * max)))}
 						onMouseMove={active && relativePositionDecoder((x) => actions.drag(rounder(x * max)))}
 						onMouseUp={actions.setActive(false)}
