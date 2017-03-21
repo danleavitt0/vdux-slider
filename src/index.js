@@ -3,13 +3,20 @@ import {component, decoder, element, Window} from 'vdux'
 import {Block} from 'vdux-ui'
 import {Input} from 'vdux-containers'
 
-const relativePositionDecoder = decoder(e => e.offsetX / e.target.getBoundingClientRect().width)
-
+const relativePositionDecoder = decoder((e) => {
+	return (e.offsetX - 15) / (e.target.getBoundingClientRect().width - 30)
+})
 const roundToStep = (step) => (num) => (Math.round(num / step) * step)
 
 export default component ({
+	initialState ({props}) {
+		return {
+			value: props.startValue || 0,
+			active: false,
+		}
+	},
 	render ({props, state, actions}) {
-		const {w = '300px', bgColor = 'blue', max = 100, name, step = 1, onChange = () => {}, ...restProps} = props
+		const {w = '300px', bgColor = 'blue', max = 100, name, step = 1, ...restProps} = props
 		const {value = 0, active} = state
 
 		const percentage = (value / max) * 100
@@ -17,29 +24,30 @@ export default component ({
 
 		return (
 			<Window onMouseUp={actions.setActive(false)}>
-				<Block px='10px'>
+				<Block
+					cursor='pointer'
+					p='10px 15px'
+					onMouseDown={[actions.setActive(true), relativePositionDecoder(actions.handleNewValue)]}
+					onMouseMove={active && relativePositionDecoder(actions.drag)}
+					onMouseUp={actions.setActive(false)}>
 					<Block
-						py='10px'
-						cursor='pointer'
-						onMouseDown={relativePositionDecoder((x) => actions.toggleActive(rounder(x * max)))}
-						onMouseMove={active && relativePositionDecoder((x) => actions.drag(rounder(x * max)))}
-						onMouseUp={actions.setActive(false)}
 						w={w}
 						relative
 						{...restProps}>
 						<Block pointerEvents='none' wide h='2px' bgColor='darkgray'/>
-						<Block pointerEvents='none' zIndex='1' h='2px' top='10px' absolute w={`${percentage}%`} bgColor={bgColor}/>
+						<Block pointerEvents='none' zIndex='1' h='2px' top='0px' absolute w={`${percentage}%`} bgColor={bgColor}/>
 						<Block
 							pointerEvents='none'
+							boxShadow=''
 							zIndex='2'
 							left={`calc(${percentage}% - 3px)`}
-							top='5px'
+							top='-5px'
 							absolute
 							circle='12px'
 							transform={active ? 'scale(1.5)' : ''}
 							transition='transform .2s ease-in-out'
 							bgColor={bgColor}/>
-						<Input onChange={onChange} h='0' visibility='hidden' name={name} value={value}/>
+						<Input m='0' h='0' visibility='hidden' name={name} value={value}/>
 					</Block>
 				</Block>
 			</Window>
@@ -51,15 +59,23 @@ export default component ({
 		}
 	},
 	controller: {
-		* drag ({props, actions, state}, x) {
+		* handleNewValue ({props, actions}, v) {
+			const rounder = roundToStep(props.step)
+			const val = normalize(rounder(v * props.max), props.max)
+			yield actions.setValue(val)
+			if (props.handleChange) {
+				yield props.handleChange(val)
+			}
+		},
+		* drag ({props, actions, state}, v) {
 			if (state.active) {
 				const {max = '100'} = props
-				if (x > max) {
-					yield actions.setValue(max)
-				} else if (x < 0) {
-					yield actions.setValue(0)
+				if (v > max) {
+					yield actions.handleNewValue(max)
+				} else if (v < 0) {
+					yield actions.handleNewValue(0)
 				} else {
-					yield actions.setValue(x)
+					yield actions.handleNewValue(v)
 				}
 			}
 		}
@@ -70,3 +86,14 @@ export default component ({
 		setActive: (state, payload) => ({...state, active: payload})
 	}
 })
+
+function normalize (val, max = 100, min = 0) {
+	if (val < min) {
+		return min
+	} else if (val > max) {
+		return max
+	} else {
+		return val
+	}
+}
+
